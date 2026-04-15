@@ -1,7 +1,15 @@
 import { notFound } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import type { Metadata } from 'next'
 import ProfileClient from './ProfileClient'
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  console.log('[Supabase] URL (first 30):', url?.slice(0, 30))
+  console.log('[Supabase] Key present:', !!key)
+  return createClient(url!, key!)
+}
 
 interface Profile {
   full_name: string
@@ -20,6 +28,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const supabase = getSupabaseClient()
   const { data } = await supabase
     .from('profiles')
     .select('full_name, username, padel_rating, tennis_rating')
@@ -42,6 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfilePage({ params }: Props) {
+  console.log('[ProfilePage] username:', params.username)
+  const supabase = getSupabaseClient()
+
   const { data: profile, error } = await supabase
     .from('profiles')
     .select(
@@ -49,6 +61,9 @@ export default async function ProfilePage({ params }: Props) {
     )
     .eq('username', params.username)
     .single()
+
+  console.log('[ProfilePage] data:', profile)
+  console.log('[ProfilePage] error:', JSON.stringify(error))
 
   if (error || !profile) {
     notFound()
