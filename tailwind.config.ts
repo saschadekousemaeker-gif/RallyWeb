@@ -9,8 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "#0D0D0D",
+        foreground: "#ffffff",
+        "rally-green": "#CCFF00",
+        "card-bg": "#1A1A1A",
+        muted: "#888888",
       },
     },
   },
