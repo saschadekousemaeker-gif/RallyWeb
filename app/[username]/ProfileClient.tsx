@@ -57,11 +57,13 @@ export default function ProfileClient({ profile, countryRank }: Props) {
     <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
       {/* Header */}
       <header className="max-w-[480px] w-full mx-auto px-5 pt-6 pb-2 flex items-center justify-between">
-        <div className="text-2xl font-black tracking-tight">
+        <a href="https://rallyrating.app" className="text-2xl font-black tracking-tight">
           <span className="text-white">RALL</span>
           <span className="text-[#CCFF00]">Y</span>
-        </div>
-        <span className="text-[#888888] text-xs">rallyrating.app</span>
+        </a>
+        <a href="https://rallyrating.app" className="text-[#888888] text-xs hover:text-white transition-colors">
+          ← Back to Rally
+        </a>
       </header>
 
       {/* Main content */}
