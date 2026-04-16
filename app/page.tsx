@@ -1,23 +1,1514 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+const FORMSPREE_URL = 'https://formspree.io/f/maqlzpwa';
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function Home() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [joinName, setJoinName] = useState('');
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joinGender, setJoinGender] = useState('');
+  const [joinRole, setJoinRole] = useState('');
+  const [joinLocation, setJoinLocation] = useState('');
+  const [joinNationality, setJoinNationality] = useState('');
+  const [joinFrequency, setJoinFrequency] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [joinSuccess, setJoinSuccess] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+    reveals.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  async function submitJoinForm() {
+    setJoinError('');
+    setJoinSuccess(false);
+    if (!joinName || !isValidEmail(joinEmail) || !joinGender || !joinRole || !joinLocation || !joinNationality || !joinFrequency) {
+      setJoinError(!isValidEmail(joinEmail) ? 'Please enter a valid email address.' : 'Please fill in all fields.');
+      return;
+    }
+    setJoinLoading(true);
+    try {
+      const res = await fetch(FORMSPREE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          name: joinName, email: joinEmail, gender: joinGender,
+          role: joinRole, location: joinLocation, nationality: joinNationality,
+          frequency: joinFrequency, source: 'join',
+        }),
+      });
+      if (res.ok) {
+        setJoinSuccess(true);
+      } else {
+        throw new Error();
+      }
+    } catch {
+      setJoinError('Something went wrong. Try again or email us at hello@rallyrating.app');
+    } finally {
+      setJoinLoading(false);
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-[#0D0D0D] flex flex-col items-center justify-center px-6">
-      <div className="max-w-[480px] w-full text-center flex flex-col items-center gap-8">
-        {/* Wordmark */}
-        <div className="text-5xl font-black tracking-tight">
-          <span className="text-white">RALL</span>
-          <span className="text-[#CCFF00]">Y</span>
+    <>
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --black: #0D0D0D;
+          --accent: #CCFF00;
+          --surface: #F2F2F0;
+          --mid: #6B6B6B;
+          --border: #E0E0E0;
+          --white: #ffffff;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+          background: var(--black);
+          color: var(--white);
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          overflow-x: hidden;
+        }
+
+        /* NAV */
+        nav {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 100;
+          padding: 1.25rem 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(13,13,13,0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          transition: padding 0.3s;
+        }
+
+        .logo {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1.4rem;
+          letter-spacing: -0.01em;
+          color: var(--white);
+          text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+          list-style: none;
+        }
+
+        .nav-links a {
+          font-size: 0.78rem;
+          font-weight: 400;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--white); }
+
+        .nav-cta {
+          font-size: 0.75rem;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--black) !important;
+          background: var(--accent);
+          padding: 0.5rem 1.25rem;
+          border-radius: 100px;
+          text-decoration: none;
+          transition: opacity 0.2s !important;
+        }
+        .nav-cta:hover { opacity: 0.85 !important; color: var(--black) !important; }
+
+        .mobile-menu-btn {
+          display: none;
+          background: none;
+          border: none;
+          cursor: pointer;
+          flex-direction: column;
+          gap: 5px;
+          padding: 4px;
+        }
+        .mobile-menu-btn span {
+          display: block;
+          width: 22px;
+          height: 1.5px;
+          background: var(--white);
+          transition: 0.3s;
+        }
+
+        .mobile-nav {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: var(--black);
+          z-index: 99;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2.5rem;
+        }
+        .mobile-nav.open { display: flex; }
+        .mobile-nav a {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 2.2rem;
+          color: var(--white);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .mobile-nav a:hover { color: var(--accent); }
+        .mobile-close {
+          position: absolute;
+          top: 1.5rem; right: 1.5rem;
+          background: none;
+          border: none;
+          color: var(--white);
+          font-size: 1.5rem;
+          cursor: pointer;
+        }
+
+        /* SECTIONS */
+        section {
+          min-height: 100vh;
+          position: relative;
+          overflow: hidden;
+        }
+
+        /* HERO */
+        #home {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 8rem 2rem 5rem;
+        }
+
+        .glow {
+          position: absolute;
+          width: 800px;
+          height: 800px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(204,255,0,0.07) 0%, transparent 65%);
+          top: -200px; right: -200px;
+          pointer-events: none;
+        }
+
+        .court-bg {
+          position: absolute;
+          inset: 0;
+          width: 100%; height: 100%;
+          opacity: 0.035;
+          pointer-events: none;
+        }
+
+        .eyebrow {
+          font-size: 0.68rem;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--accent);
+          margin-bottom: 1.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          position: relative;
+          z-index: 2;
+        }
+        .eyebrow::before, .eyebrow::after {
+          content: '';
+          display: block;
+          width: 28px; height: 1px;
+          background: var(--accent);
+          opacity: 0.4;
+        }
+
+        h1 {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: clamp(3.2rem, 9vw, 6.5rem);
+          line-height: 1.0;
+          letter-spacing: 0.01em;
+          color: var(--white);
+          position: relative;
+          z-index: 2;
+        }
+        h1 em { font-style: italic; color: var(--accent); }
+
+        .hero-sub {
+          font-size: clamp(0.9rem, 2vw, 1.05rem);
+          color: rgba(255,255,255,0.42);
+          font-weight: 300;
+          margin-top: 1.75rem;
+          margin-bottom: 2.75rem;
+          max-width: 400px;
+          line-height: 1.7;
+          position: relative;
+          z-index: 2;
+        }
+
+        /* FORM */
+        .invite-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+          width: 100%;
+          max-width: 440px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .invite-row {
+          display: flex;
+          width: 100%;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 100px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.04);
+          transition: border-color 0.25s;
+        }
+        .invite-row:focus-within { border-color: rgba(204,255,0,0.45); }
+
+        .invite-row input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          padding: 0.875rem 1.25rem;
+          font-size: 0.9rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-weight: 300;
+          color: var(--white);
+          min-width: 0;
+        }
+        .invite-row input::placeholder { color: rgba(255,255,255,0.28); }
+
+        .invite-row button {
+          background: var(--accent);
+          color: var(--black);
+          border: none;
+          padding: 0.875rem 1.5rem;
+          font-size: 0.8rem;
+          font-weight: 500;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          letter-spacing: 0.05em;
+          cursor: pointer;
+          border-radius: 100px;
+          margin: 4px;
+          transition: opacity 0.2s, transform 0.15s;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .invite-row button:hover { opacity: 0.85; }
+        .invite-row button:active { transform: scale(0.96); }
+        .invite-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .form-msg {
+          font-size: 0.8rem;
+          display: none;
+          padding: 0.75rem 1.25rem;
+          border-radius: 100px;
+          width: 100%;
+          text-align: center;
+        }
+        .form-msg.error { color: rgba(255,100,100,0.9); background: rgba(255,100,100,0.06); border: 1px solid rgba(255,100,100,0.15); }
+        .form-msg.success { color: var(--accent); background: rgba(204,255,0,0.05); border: 1px solid rgba(204,255,0,0.2); }
+
+        /* HERO STATS */
+        .hero-stats {
+          display: flex;
+          gap: 3rem;
+          margin-top: 4.5rem;
+          align-items: center;
+          position: relative;
+          z-index: 2;
+        }
+        .stat { text-align: center; }
+        .stat-num {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 2.2rem;
+          line-height: 1;
+        }
+        .stat-num span { color: var(--accent); }
+        .stat-label {
+          font-size: 0.65rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.25);
+          margin-top: 0.4rem;
+        }
+        .stat-divider {
+          width: 1px; height: 36px;
+          background: rgba(255,255,255,0.07);
+        }
+
+        /* HOW IT WORKS */
+        #how-it-works {
+          padding: 7rem 3rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: #0a0a0a;
+          min-height: auto;
+        }
+
+        .section-label {
+          font-size: 0.68rem;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--accent);
+          margin-bottom: 1rem;
+        }
+
+        .section-title {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: clamp(2rem, 5vw, 3.5rem);
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          text-align: center;
+          margin-bottom: 1rem;
+          max-width: 600px;
+        }
+        .section-title em { font-style: italic; color: var(--accent); }
+
+        .section-sub {
+          font-size: 1rem;
+          color: rgba(255,255,255,0.4);
+          font-weight: 300;
+          text-align: center;
+          max-width: 480px;
+          line-height: 1.7;
+          margin-bottom: 5rem;
+        }
+
+        .steps {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1px;
+          width: 100%;
+          max-width: 960px;
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+
+        .step {
+          padding: 2.5rem 2rem;
+          background: rgba(255,255,255,0.02);
+          position: relative;
+          transition: background 0.3s;
+        }
+        .step:hover { background: rgba(255,255,255,0.04); }
+
+        .step-num {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 3rem;
+          color: rgba(204,255,0,0.12);
+          line-height: 1;
+          margin-bottom: 1.25rem;
+        }
+
+        .step h3 {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1.25rem;
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.01em;
+        }
+
+        .step p {
+          font-size: 0.88rem;
+          color: rgba(255,255,255,0.4);
+          line-height: 1.7;
+          font-weight: 300;
+        }
+
+        .step-border {
+          border-right: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* Elo visual */
+        .elo-visual {
+          margin-top: 5rem;
+          width: 100%;
+          max-width: 960px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
+          padding: 3rem;
+          display: flex;
+          align-items: center;
+          gap: 3rem;
+        }
+        .elo-text { flex: 1; }
+        .elo-text h3 {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1.6rem;
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.02em;
+        }
+        .elo-text p {
+          font-size: 0.9rem;
+          color: rgba(255,255,255,0.4);
+          line-height: 1.75;
+          font-weight: 300;
+        }
+        .elo-chart { flex: 1; position: relative; height: 120px; }
+        .elo-line {
+          width: 100%;
+          height: 100%;
+        }
+
+        /* FOR CLUBS */
+        #for-clubs {
+          padding: 7rem 3rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          min-height: auto;
+        }
+
+        .clubs-accent-bg {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 60% 60% at 80% 50%, rgba(204,255,0,0.04) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .clubs-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4rem;
+          width: 100%;
+          max-width: 960px;
+          align-items: center;
+          margin-top: 2rem;
+        }
+
+        .clubs-left .section-title { text-align: left; }
+        .clubs-left .section-sub { text-align: left; }
+
+        .benefit-list {
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .benefit-list li {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.875rem;
+          font-size: 0.9rem;
+          color: rgba(255,255,255,0.55);
+          line-height: 1.6;
+          font-weight: 300;
+        }
+        .benefit-dot {
+          flex-shrink: 0;
+          width: 20px; height: 20px;
+          border-radius: 50%;
+          background: rgba(204,255,0,0.1);
+          border: 1px solid rgba(204,255,0,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 2px;
+        }
+        .benefit-dot::after {
+          content: '';
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
+        }
+
+        .clubs-right {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .club-card {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 12px;
+          padding: 1.5rem;
+          transition: border-color 0.3s, background 0.3s;
+        }
+        .club-card:hover {
+          border-color: rgba(204,255,0,0.2);
+          background: rgba(204,255,0,0.02);
+        }
+
+        .club-card-icon {
+          font-size: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .club-card h4 {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1rem;
+          margin-bottom: 0.4rem;
+          letter-spacing: -0.01em;
+        }
+        .club-card p {
+          font-size: 0.82rem;
+          color: rgba(255,255,255,0.35);
+          line-height: 1.6;
+          font-weight: 300;
+        }
+
+        .clubs-cta {
+          margin-top: 2.5rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.82rem;
+          font-weight: 500;
+          letter-spacing: 0.05em;
+          color: var(--black);
+          background: var(--accent);
+          padding: 0.75rem 1.5rem;
+          border-radius: 100px;
+          text-decoration: none;
+          transition: opacity 0.2s;
+        }
+        .clubs-cta:hover { opacity: 0.85; }
+
+        /* ABOUT */
+        #about {
+          padding: 7rem 3rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: #0a0a0a;
+          min-height: auto;
+        }
+
+        .about-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4rem;
+          width: 100%;
+          max-width: 960px;
+          margin-top: 3rem;
+          align-items: start;
+        }
+
+        .about-text p {
+          font-size: 0.95rem;
+          color: rgba(255,255,255,0.5);
+          line-height: 1.85;
+          font-weight: 300;
+          margin-bottom: 1.25rem;
+        }
+
+        .about-text p:last-child { margin-bottom: 0; }
+
+        .about-text strong {
+          color: rgba(255,255,255,0.85);
+          font-weight: 400;
+        }
+
+        .about-right {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .founder-card {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 12px;
+          padding: 1.5rem;
+        }
+
+        .founder-name {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1.1rem;
+          margin-bottom: 0.25rem;
+        }
+        .founder-role {
+          font-size: 0.72rem;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--accent);
+          margin-bottom: 0.75rem;
+        }
+        .founder-bio {
+          font-size: 0.84rem;
+          color: rgba(255,255,255,0.38);
+          line-height: 1.65;
+          font-weight: 300;
+        }
+
+        .values-strip {
+          width: 100%;
+          max-width: 960px;
+          margin-top: 5rem;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1px;
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        .value {
+          padding: 2rem;
+          background: rgba(255,255,255,0.015);
+        }
+        .value h4 {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        .value p {
+          font-size: 0.82rem;
+          color: rgba(255,255,255,0.35);
+          line-height: 1.65;
+          font-weight: 300;
+        }
+        .value-border { border-right: 1px solid rgba(255,255,255,0.06); }
+
+        /* JOIN / WAITLIST */
+        #join {
+          padding: 8rem 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          min-height: auto;
+          position: relative;
+        }
+
+        .join-glow {
+          position: absolute;
+          width: 600px; height: 600px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(204,255,0,0.06) 0%, transparent 65%);
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        .join-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.68rem;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--black);
+          background: var(--accent);
+          padding: 0.35rem 0.875rem;
+          border-radius: 100px;
+          margin-bottom: 2rem;
+          position: relative;
+          z-index: 2;
+        }
+
+        #join .section-title {
+          position: relative;
+          z-index: 2;
+          max-width: 640px;
+        }
+        #join .section-sub {
+          position: relative;
+          z-index: 2;
+          margin-bottom: 3rem;
+        }
+
+        .waitlist-form-wrap {
+          width: 100%;
+          max-width: 520px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .waitlist-row {
+          display: flex;
+          gap: 0.75rem;
+          width: 100%;
+          margin-bottom: 0.75rem;
+        }
+
+        .waitlist-row input {
+          flex: 1;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 100px;
+          outline: none;
+          padding: 0.9rem 1.25rem;
+          font-size: 0.9rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-weight: 300;
+          color: var(--white);
+          transition: border-color 0.25s;
+        }
+        .waitlist-row input:focus { border-color: rgba(204,255,0,0.45); }
+        .waitlist-row input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .waitlist-btn {
+          background: var(--accent);
+          color: var(--black);
+          border: none;
+          padding: 0.9rem 1.75rem;
+          font-size: 0.82rem;
+          font-weight: 500;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          letter-spacing: 0.05em;
+          border-radius: 100px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: opacity 0.2s, transform 0.15s;
+          flex-shrink: 0;
+        }
+        .waitlist-btn:hover { opacity: 0.85; }
+        .waitlist-btn:active { transform: scale(0.97); }
+        .waitlist-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .waitlist-note {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.2);
+          letter-spacing: 0.03em;
+        }
+
+        .waitlist-msg {
+          font-size: 0.85rem;
+          padding: 0.875rem 1.5rem;
+          border-radius: 100px;
+          margin-bottom: 0.75rem;
+          text-align: center;
+        }
+        .waitlist-msg.error { color: rgba(255,100,100,0.9); background: rgba(255,100,100,0.06); border: 1px solid rgba(255,100,100,0.15); }
+        .waitlist-msg.success { color: var(--accent); background: rgba(204,255,0,0.05); border: 1px solid rgba(204,255,0,0.2); }
+
+        /* WAITLIST MULTI-FIELD FORM */
+        .waitlist-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .waitlist-field {
+          width: 100%;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 100px;
+          outline: none;
+          padding: 0.9rem 1.25rem;
+          font-size: 0.9rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-weight: 300;
+          color: var(--white);
+          transition: border-color 0.25s;
+          box-sizing: border-box;
+          appearance: none;
+          -webkit-appearance: none;
+        }
+        .waitlist-field:focus { border-color: rgba(204,255,0,0.45); }
+        .waitlist-field::placeholder { color: rgba(255,255,255,0.25); }
+        select.waitlist-field { color: rgba(255,255,255,0.25); cursor: pointer; }
+        select.waitlist-field.wf-chosen { color: var(--white); }
+        select.waitlist-field option { background: #141414; color: #fff; }
+
+        .wf-sel {
+          position: relative;
+        }
+        .wf-sel::after {
+          content: '';
+          position: absolute;
+          right: 1.15rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 5px solid rgba(255,255,255,0.35);
+          pointer-events: none;
+        }
+        .wf-sel select { padding-right: 2.5rem; }
+
+        /* FOOTER */
+        footer {
+          padding: 2rem 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .footer-logo {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 1.1rem;
+          color: var(--white);
+          text-decoration: none;
+        }
+        .footer-logo span { color: var(--accent); }
+
+        .footer-links {
+          display: flex;
+          gap: 2rem;
+          list-style: none;
+        }
+        .footer-links a {
+          font-size: 0.72rem;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.25);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .live-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
+          animation: pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0%,100% { opacity:1; transform:scale(1); }
+          50% { opacity:0.35; transform:scale(0.65); }
+        }
+        .footer-status {
+          font-size: 0.7rem;
+          color: rgba(255,255,255,0.2);
+          letter-spacing: 0.04em;
+        }
+
+        /* FADE ANIMATIONS */
+        .fade-up {
+          opacity: 0;
+          transform: translateY(24px);
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+        .d1{animation-delay:0.05s} .d2{animation-delay:0.2s} .d3{animation-delay:0.35s}
+        .d4{animation-delay:0.5s} .d5{animation-delay:0.65s} .d6{animation-delay:0.8s}
+
+        .reveal {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94), transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+          nav { padding: 1.25rem 1.25rem; }
+          .nav-links { display: none; }
+          .mobile-menu-btn { display: flex; }
+
+          #home { padding: 7rem 1.25rem 4rem; }
+
+          .steps { grid-template-columns: 1fr; }
+          .step-border { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+          .elo-visual { flex-direction: column; gap: 2rem; padding: 2rem; }
+
+          .clubs-grid { grid-template-columns: 1fr; gap: 3rem; }
+          .clubs-left .section-title,
+          .clubs-left .section-sub { text-align: center; }
+          .benefit-list { max-width: 400px; margin: 0 auto; }
+
+          .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+
+          .values-strip { grid-template-columns: 1fr; }
+          .value-border { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+          .waitlist-row { flex-direction: column; }
+          .waitlist-grid { grid-template-columns: 1fr; }
+          .waitlist-btn { width: 100%; }
+
+          footer {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+            padding: 2rem 1.25rem;
+          }
+          .footer-links { gap: 1.25rem; flex-wrap: wrap; justify-content: center; }
+
+          #how-it-works,
+          #for-clubs,
+          #about,
+          #join { padding: 5rem 1.25rem; }
+
+          .hero-stats { gap: 1.75rem; }
+        }
+      `}</style>
+
+      {/* NAV */}
+      <nav>
+        <a href="#home" className="logo">RALL<span>Y.</span></a>
+        <ul className="nav-links">
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#for-clubs">For clubs</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="mailto:hello@rallyrating.app">Contact</a></li>
+          <li><a href="#join" className="nav-cta">Join waitlist</a></li>
+        </ul>
+        <button className="mobile-menu-btn" onClick={() => setMobileNavOpen(true)} aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </nav>
+
+      {/* MOBILE NAV */}
+      <div className={`mobile-nav${mobileNavOpen ? ' open' : ''}`}>
+        <button className="mobile-close" onClick={() => setMobileNavOpen(false)}>✕</button>
+        <a href="#home" onClick={() => setMobileNavOpen(false)}>Home</a>
+        <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How it works</a>
+        <a href="#for-clubs" onClick={() => setMobileNavOpen(false)}>For clubs</a>
+        <a href="#about" onClick={() => setMobileNavOpen(false)}>About</a>
+        <a href="mailto:hello@rallyrating.app" onClick={() => setMobileNavOpen(false)}>Contact</a>
+        <a href="#join" onClick={() => setMobileNavOpen(false)}>Join waitlist</a>
+      </div>
+
+      {/* HERO */}
+      <section id="home">
+        <div className="glow"></div>
+        <svg className="court-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="120" y="60" width="1200" height="780" fill="none" stroke="white" strokeWidth="2" />
+          <line x1="720" y1="60" x2="720" y2="840" stroke="white" strokeWidth="2" />
+          <rect x="300" y="60" width="840" height="360" fill="none" stroke="white" strokeWidth="2" />
+          <rect x="300" y="480" width="840" height="360" fill="none" stroke="white" strokeWidth="2" />
+          <line x1="120" y1="450" x2="1320" y2="450" stroke="white" strokeWidth="3" />
+        </svg>
+
+        <div className="eyebrow fade-up d1">Performance identity for padel &amp; tennis</div>
+
+        <h1 className="fade-up d2">RALL<span style={{ color: '#CCFF00' }}>Y.</span><br /><em>Know your game.</em></h1>
+
+        <p className="hero-sub fade-up d3">
+          A dynamic rating that moves with your game.<br />
+          Get matched to your level. Build your performance identity on court.
+        </p>
+
+        <a href="#join" className="nav-cta fade-up d4">Join waitlist</a>
+
+        <div className="hero-stats fade-up d5">
+          <div className="stat">
+            <div className="stat-num">Elo<span>.</span></div>
+            <div className="stat-label">Rating system</div>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat">
+            <div className="stat-num">2026<span>.</span></div>
+            <div className="stat-label">Launch Year</div>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat">
+            <div className="stat-num">Madrid<span>.</span></div>
+            <div className="stat-label">Launching in</div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how-it-works">
+        <div className="section-label reveal">How it works</div>
+        <h2 className="section-title reveal" style={{ marginBottom: '1rem' }}>Your rating, <em>earned on court.</em></h2>
+        <p className="section-sub reveal">RALLY tracks every match, calculates your Elo, and builds a performance identity that actually reflects how you play.</p>
+
+        <div className="steps reveal">
+          <div className="step step-border">
+            <div className="step-num">01</div>
+            <h3>Log your match</h3>
+            <p>Record the result after every game — singles or doubles, padel or tennis. Takes under 30 seconds.</p>
+          </div>
+          <div className="step step-border">
+            <div className="step-num">02</div>
+            <h3>Your Elo updates</h3>
+            <p>Win against a stronger player and your rating climbs more. Beat someone weaker and it barely moves. Honest, dynamic, fair.</p>
+          </div>
+          <div className="step">
+            <div className="step-num">03</div>
+            <h3>Know your level</h3>
+            <p>See exactly where you stand, track your progress over time, and find opponents at your level.</p>
+          </div>
         </div>
 
-        {/* Tagline */}
-        <p className="text-[#888888] text-lg leading-relaxed">
-          The performance identity platform for serious racket sport players.
-        </p>
+        <div className="elo-visual reveal">
+          <div className="elo-text">
+            <h3>Why <em>Elo?</em></h3>
+            <p>The same system used in chess, table tennis, and football rankings. It adjusts based on the strength of your opposition — so beating a top player matters more than beating a beginner. Your rating is a true reflection of your game, not just your win count.</p>
+          </div>
+          <div className="elo-chart">
+            <svg className="elo-line" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#CCFF00" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#CCFF00" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+              <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+              <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+              <path d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,60 L240,40 L280,35 L320,20 L360,15 L400,10 L400,120 L0,120 Z" fill="url(#lineGrad)" opacity="0.6" />
+              <polyline points="0,90 40,85 80,70 120,75 160,55 200,60 240,40 280,35 320,20 360,15 400,10" fill="none" stroke="#CCFF00" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              <circle cx="120" cy="75" r="3" fill="#0D0D0D" stroke="#CCFF00" strokeWidth="1.5" />
+              <circle cx="200" cy="60" r="3" fill="#0D0D0D" stroke="#CCFF00" strokeWidth="1.5" />
+              <circle cx="400" cy="10" r="4" fill="#CCFF00" />
+              <text x="0" y="115" fontSize="9" fill="rgba(255,255,255,0.2)" fontFamily="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif">Start</text>
+              <text x="370" y="8" fontSize="9" fill="#CCFF00" fontFamily="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif">Now</text>
+            </svg>
+          </div>
+        </div>
+      </section>
 
-        {/* CTA */}
-        <p className="text-[#888888] text-sm tracking-widest uppercase">
-          Coming soon to the App Store
-        </p>
-      </div>
-    </main>
+      {/* FOR CLUBS & COACHES */}
+      <section id="for-clubs">
+        <div className="clubs-accent-bg"></div>
+        <div className="clubs-grid reveal">
+          <div className="clubs-left">
+            <div className="section-label">For clubs &amp; coaches</div>
+            <h2 className="section-title">A tool your players <em>will talk about.</em></h2>
+            <p className="section-sub" style={{ marginBottom: '2rem' }}>RALLY gives clubs and coaches a way to add real structure to player development — with ratings that mean something.</p>
+            <ul className="benefit-list">
+              <li>
+                <div className="benefit-dot"></div>
+                <span>Offer players a verified rating — not just a subjective level.</span>
+              </li>
+              <li>
+                <div className="benefit-dot"></div>
+                <span>Organise tournaments and leagues with fair, auto-balanced brackets.</span>
+              </li>
+              <li>
+                <div className="benefit-dot"></div>
+                <span>Track player progress over time — show the value of coaching.</span>
+              </li>
+              <li>
+                <div className="benefit-dot"></div>
+                <span>Attract players who take their game seriously.</span>
+              </li>
+            </ul>
+            <a href="mailto:hello@rallyrating.app" className="clubs-cta">
+              Get in touch →
+            </a>
+          </div>
+          <div className="clubs-right">
+            <div className="club-card">
+              <div className="club-card-icon">🎾</div>
+              <h4>Structured academies</h4>
+              <p>Integrate RALLY into your academy programme. Students can track their rating improvement alongside their coaching sessions.</p>
+            </div>
+            <div className="club-card">
+              <div className="club-card-icon">🏆</div>
+              <h4>Club tournaments</h4>
+              <p>Run internal tournaments with automatic seeding based on Elo ratings. Fair draws, competitive matches, engaged players.</p>
+            </div>
+            <div className="club-card">
+              <div className="club-card-icon">📊</div>
+              <h4>Performance tracking</h4>
+              <p>Give players visibility on their progression. Coaches can use data to demonstrate development and retain members longer.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section id="about">
+        <div className="section-label reveal">About RALLY</div>
+        <h2 className="section-title reveal">Built by players, <em>for players.</em></h2>
+
+        <div className="about-grid reveal">
+          <div className="about-text">
+            <p>Padel is the fastest growing sport in the world. In Spain alone, there are over 5 million players and thousands of clubs — yet there is still no universal way to know your level. No shared rating. No objective benchmark. Just a game that keeps growing with no infrastructure to match it.</p>
+            <p>RALLY was Sascha&apos;s idea. He brought Iñaki on to lead the commercial side — and together they&apos;re building the performance identity layer for padel, starting in Madrid in 2026.</p>
+            <p>We&apos;re launching with a small group of founding players who&apos;ll help shape what RALLY becomes. If you care about your game, we&apos;d love you to be part of it.</p>
+          </div>
+          <div className="about-right">
+            <div className="founder-card">
+              <div className="founder-name">Iñaki González Gómez</div>
+              <div className="founder-role">Co-Founder · Commercial &amp; Strategy</div>
+              <div className="founder-bio">BBA student at IE Business School in Madrid. Grew up obsessed with sport — particularly football, where his love of stats and performance data started early. That analytical instinct is what drives RALLY. Before co-founding RALLY, Iñaki interned at ATW Partners in New York, working on investment analysis and portfolio research across the VC and private equity landscape. He leads commercial strategy, club and coach partnerships, and brand.</div>
+            </div>
+            <div className="founder-card">
+              <div className="founder-name">Sascha de Kousemaeker</div>
+              <div className="founder-role">Co-Founder · Product &amp; Engineering</div>
+              <div className="founder-bio">Law student at IE Law School in Madrid. Sascha has worked across corporate law — interning at Vendrell &amp; Herrera Legal as outside counsel to Marriott International, handling cross-border transactions and contract drafting. At RALLY, he brings the same precision to building the product: the rating engine, the platform architecture, and making sure every number means something.</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="values-strip reveal">
+          <div className="value value-border">
+            <h4>Honest ratings</h4>
+            <p>No vanity numbers. Your Elo reflects who you actually beat and who beat you. Nothing more, nothing less.</p>
+          </div>
+          <div className="value value-border">
+            <h4>Better matches</h4>
+            <p>Ratings only matter if they lead somewhere. RALLY is the foundation for finding opponents at exactly your level.</p>
+          </div>
+          <div className="value">
+            <h4>Built to last</h4>
+            <p>We&apos;re starting small, on purpose. 20 founding players in Madrid. Then we grow — the right way.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* JOIN / WAITLIST */}
+      <section id="join">
+        <div className="join-glow"></div>
+
+        <div className="join-label reveal">Founding players</div>
+
+        <h2 className="section-title reveal">Be one of the first<br /><em>20 players.</em></h2>
+        <p className="section-sub reveal">We&apos;re hand-picking a founding group in Madrid. You&apos;ll shape the product, get early access, and carry a rating number that means something.</p>
+
+        <div className="waitlist-form-wrap reveal">
+          {joinError && (
+            <div className="waitlist-msg error">{joinError}</div>
+          )}
+          {joinSuccess && (
+            <div className="waitlist-msg success">You&apos;re on the list — we&apos;ll be in touch soon.</div>
+          )}
+
+          <div className="waitlist-grid">
+            <input
+              type="text"
+              className="waitlist-field"
+              placeholder="Full name"
+              autoComplete="name"
+              value={joinName}
+              onChange={(e) => setJoinName(e.target.value)}
+            />
+            <input
+              type="email"
+              className="waitlist-field"
+              placeholder="Email address"
+              autoComplete="email"
+              value={joinEmail}
+              onChange={(e) => setJoinEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitJoinForm(); }}
+            />
+          </div>
+
+          <div className="waitlist-grid">
+            <div className="wf-sel">
+              <select
+                className={`waitlist-field${joinGender ? ' wf-chosen' : ''}`}
+                value={joinGender}
+                onChange={(e) => setJoinGender(e.target.value)}
+              >
+                <option value="" disabled>Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="wf-sel">
+              <select
+                className={`waitlist-field${joinRole ? ' wf-chosen' : ''}`}
+                value={joinRole}
+                onChange={(e) => setJoinRole(e.target.value)}
+              >
+                <option value="" disabled>I am a...</option>
+                <option value="Player">Player</option>
+                <option value="Coach">Coach</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="waitlist-row">
+            <input
+              type="text"
+              className="waitlist-field"
+              placeholder="City"
+              autoComplete="address-level2"
+              value={joinLocation}
+              onChange={(e) => setJoinLocation(e.target.value)}
+            />
+          </div>
+
+          <div className="waitlist-row">
+            <div className="wf-sel" style={{ width: '100%' }}>
+              <select
+                className={`waitlist-field${joinNationality ? ' wf-chosen' : ''}`}
+                value={joinNationality}
+                onChange={(e) => setJoinNationality(e.target.value)}
+              >
+                <option value="" disabled>Nationality</option>
+                <option>Afghan</option>
+                <option>Albanian</option>
+                <option>Algerian</option>
+                <option>Andorran</option>
+                <option>Angolan</option>
+                <option>Antiguan / Barbudan</option>
+                <option>Argentine</option>
+                <option>Armenian</option>
+                <option>Australian</option>
+                <option>Austrian</option>
+                <option>Azerbaijani</option>
+                <option>Bahamian</option>
+                <option>Bahraini</option>
+                <option>Bangladeshi</option>
+                <option>Barbadian</option>
+                <option>Belarusian</option>
+                <option>Belgian</option>
+                <option>Belizean</option>
+                <option>Beninese</option>
+                <option>Bhutanese</option>
+                <option>Bolivian</option>
+                <option>Bosnian / Herzegovinian</option>
+                <option>Botswanan</option>
+                <option>Brazilian</option>
+                <option>Bruneian</option>
+                <option>Bulgarian</option>
+                <option>Burkinabé</option>
+                <option>Burundian</option>
+                <option>Cabo Verdean</option>
+                <option>Cambodian</option>
+                <option>Cameroonian</option>
+                <option>Canadian</option>
+                <option>Central African</option>
+                <option>Chadian</option>
+                <option>Chilean</option>
+                <option>Chinese</option>
+                <option>Colombian</option>
+                <option>Comorian</option>
+                <option>Congolese (Brazzaville)</option>
+                <option>Congolese (DRC)</option>
+                <option>Costa Rican</option>
+                <option>Croatian</option>
+                <option>Cuban</option>
+                <option>Cypriot</option>
+                <option>Czech</option>
+                <option>Danish</option>
+                <option>Djiboutian</option>
+                <option>Dominican (Commonwealth)</option>
+                <option>Dominican (Republic)</option>
+                <option>Ecuadorian</option>
+                <option>Egyptian</option>
+                <option>Salvadoran</option>
+                <option>Equatoguinean</option>
+                <option>Eritrean</option>
+                <option>Estonian</option>
+                <option>Swazi</option>
+                <option>Ethiopian</option>
+                <option>Fijian</option>
+                <option>Finnish</option>
+                <option>French</option>
+                <option>Gabonese</option>
+                <option>Gambian</option>
+                <option>Georgian</option>
+                <option>German</option>
+                <option>Ghanaian</option>
+                <option>Greek</option>
+                <option>Grenadian</option>
+                <option>Guatemalan</option>
+                <option>Guinean</option>
+                <option>Bissau-Guinean</option>
+                <option>Guyanese</option>
+                <option>Haitian</option>
+                <option>Honduran</option>
+                <option>Hungarian</option>
+                <option>Icelandic</option>
+                <option>Indian</option>
+                <option>Indonesian</option>
+                <option>Iranian</option>
+                <option>Iraqi</option>
+                <option>Irish</option>
+                <option>Israeli</option>
+                <option>Italian</option>
+                <option>Jamaican</option>
+                <option>Japanese</option>
+                <option>Jordanian</option>
+                <option>Kazakhstani</option>
+                <option>Kenyan</option>
+                <option>I-Kiribati</option>
+                <option>Kuwaiti</option>
+                <option>Kyrgyz</option>
+                <option>Lao</option>
+                <option>Latvian</option>
+                <option>Lebanese</option>
+                <option>Basotho</option>
+                <option>Liberian</option>
+                <option>Libyan</option>
+                <option>Liechtenstein</option>
+                <option>Lithuanian</option>
+                <option>Luxembourgish</option>
+                <option>Malagasy</option>
+                <option>Malawian</option>
+                <option>Malaysian</option>
+                <option>Maldivian</option>
+                <option>Malian</option>
+                <option>Maltese</option>
+                <option>Marshallese</option>
+                <option>Mauritanian</option>
+                <option>Mauritian</option>
+                <option>Mexican</option>
+                <option>Micronesian</option>
+                <option>Moldovan</option>
+                <option>Monégasque</option>
+                <option>Mongolian</option>
+                <option>Montenegrin</option>
+                <option>Moroccan</option>
+                <option>Mozambican</option>
+                <option>Burmese</option>
+                <option>Namibian</option>
+                <option>Nauruan</option>
+                <option>Nepali</option>
+                <option>Dutch</option>
+                <option>New Zealander</option>
+                <option>Nicaraguan</option>
+                <option>Nigerien</option>
+                <option>Nigerian</option>
+                <option>North Korean</option>
+                <option>North Macedonian</option>
+                <option>Norwegian</option>
+                <option>Omani</option>
+                <option>Pakistani</option>
+                <option>Palauan</option>
+                <option>Palestinian</option>
+                <option>Panamanian</option>
+                <option>Papua New Guinean</option>
+                <option>Paraguayan</option>
+                <option>Peruvian</option>
+                <option>Filipino</option>
+                <option>Polish</option>
+                <option>Portuguese</option>
+                <option>Qatari</option>
+                <option>Romanian</option>
+                <option>Russian</option>
+                <option>Rwandan</option>
+                <option>Kittitian / Nevisian</option>
+                <option>Saint Lucian</option>
+                <option>Vincentian</option>
+                <option>Samoan</option>
+                <option>Sammarinese</option>
+                <option>São Toméan</option>
+                <option>Saudi</option>
+                <option>Senegalese</option>
+                <option>Serbian</option>
+                <option>Seychellois</option>
+                <option>Sierra Leonean</option>
+                <option>Singaporean</option>
+                <option>Slovak</option>
+                <option>Slovenian</option>
+                <option>Solomon Islander</option>
+                <option>Somali</option>
+                <option>South African</option>
+                <option>South Korean</option>
+                <option>South Sudanese</option>
+                <option>Spanish</option>
+                <option>Sri Lankan</option>
+                <option>Sudanese</option>
+                <option>Surinamese</option>
+                <option>Swedish</option>
+                <option>Swiss</option>
+                <option>Syrian</option>
+                <option>Tajik</option>
+                <option>Tanzanian</option>
+                <option>Thai</option>
+                <option>Timorese</option>
+                <option>Togolese</option>
+                <option>Tongan</option>
+                <option>Trinidadian / Tobagonian</option>
+                <option>Tunisian</option>
+                <option>Turkish</option>
+                <option>Turkmen</option>
+                <option>Tuvaluan</option>
+                <option>Ugandan</option>
+                <option>Ukrainian</option>
+                <option>Emirati</option>
+                <option>British</option>
+                <option>American</option>
+                <option>Uruguayan</option>
+                <option>Uzbek</option>
+                <option>Ni-Vanuatu</option>
+                <option>Venezuelan</option>
+                <option>Vietnamese</option>
+                <option>Yemeni</option>
+                <option>Zambian</option>
+                <option>Zimbabwean</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="waitlist-row">
+            <div className="wf-sel" style={{ width: '100%' }}>
+              <select
+                className={`waitlist-field${joinFrequency ? ' wf-chosen' : ''}`}
+                value={joinFrequency}
+                onChange={(e) => setJoinFrequency(e.target.value)}
+              >
+                <option value="" disabled>How often do you play?</option>
+                <option value="1x per week">1x per week</option>
+                <option value="2-3x per week">2–3x per week</option>
+                <option value="4x+ per week">4x+ per week</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            className="waitlist-btn"
+            type="button"
+            onClick={submitJoinForm}
+            disabled={joinLoading}
+            style={{ width: '100%', marginTop: '0.25rem' }}
+          >
+            {joinLoading ? 'Sending…' : 'Join waitlist'}
+          </button>
+          <div className="waitlist-note" style={{ marginTop: '0.75rem' }}>No spam, ever.</div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer>
+        <a href="#home" className="footer-logo">RALL<span>Y</span></a>
+        <ul className="footer-links">
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#for-clubs">For clubs</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="mailto:hello@rallyrating.app">Contact</a></li>
+        </ul>
+        <div className="footer-right">
+          <div className="live-dot"></div>
+          <span className="footer-status">Madrid · 2026</span>
+        </div>
+      </footer>
+    </>
   );
 }

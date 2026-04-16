@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Rally — Performance Identity for Racket Sports",
-  description: "The performance identity platform for serious racket sport players.",
+  title: "RALLY — Know Your Game",
+  description: "A dynamic rating that moves with your game. Get matched to your level. Build your performance identity on court.",
   openGraph: {
-    title: "Rally",
-    description: "The performance identity platform for serious racket sport players.",
+    title: "RALLY — Know Your Game",
+    description: "Performance identity for padel & tennis. Coming soon to Madrid.",
+    url: "https://rallyrating.app",
     siteName: "Rally",
   },
 };
